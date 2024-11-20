@@ -1,0 +1,37 @@
+﻿name: Performance Measurement
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y perl bc time
+        wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+        bash miniconda.sh -b -p $HOME/miniconda
+        export PATH="$HOME/miniconda/bin:$PATH"
+        conda init bash
+        source ~/.bashrc
+        conda create -n testenv310 python=3.10 -y
+        conda create -n testenv311 python=3.11 -y
+        conda create -n testenv312 python=3.12 -y
+        conda create -n testenv313 python=3.13 -y
+
+    - name: Make scripts executable
+      run: chmod +x measure.sh string_replace.pl string_replace.py
+
+    - name: Run measure script
+      env:
+        CONDA_BASE: $HOME/miniconda
+      run: ./measure.sh
